@@ -1,5 +1,5 @@
 {
-  "name": "Animal Kids",
+  "name": "Roni'nin Dünyası",
   "description": "Educational age-first learning game for children aged 2-5 featuring age selection, real animal sounds, nature & geography, fruits, shapes, numbers, symbols, and color-based learning rewards.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

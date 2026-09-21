@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Animal Kids"
+rootProject.name = "Roni'nin Dünyası"
 
 include(":app")

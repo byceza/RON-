@@ -39,7 +39,7 @@ enum class RewardFruit(
     MANDARIN("Mandalina", "Turuncu", "🍊", "Hadi şu tatlı turuncu mandalinayı ye bakalım.", Color(0xFFFB8500)),
     WATERMELON("Karpuz", "Kırmızı", "🍉", "Hadi şu sulu kırmızı karpuzu ısır bakalım.", Color(0xFF06D6A0)),
     BLUEBERRY("Yaban Mersini", "Mavi", "🫐", "Hadi şu minik mavi yaban mersinini ye bakalım.", Color(0xFF3A86FF)),
-    BLACKBERRY("Böğürtlen", "Mor", "🍇", "Hadi şu tatlı mor böğürtleni ye bakalım.", Color(0xFF7209B7)),
+    BLACKBERRY("Böğürtlen", "Mor", "🫐", "Hadi şu tatlı mor böğürtleni ye bakalım.", Color(0xFF7209B7)),
     MANGO("Mango", "Sarı", "🥭", "Hadi şu tatlı sarı mangoyu ye bakalım.", Color(0xFFFF9E00)),
     AVOCADO("Avokado", "Yeşil", "🥑", "Hadi şu taze yeşil avokadoyu ye bakalım.", Color(0xFF588157)),
     CHERRY("Kiraz", "Kırmızı", "🍒", "Hadi şu tatlı kırmızı kirazı ye bakalım.", Color(0xFFD90429)),

@@ -3,8 +3,9 @@ package com.example
 import com.example.animalapp.ui.components.RewardFruit
 import com.example.model.AgeGroup
 import com.example.model.AnimalRepository
+import com.example.model.LearningCategory
+import com.example.model.VoiceGender
 import com.example.ui.AnimalGameViewModel
-import com.example.ui.GameTab
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -93,6 +94,18 @@ class ExampleUnitTest {
   }
 
   @Test
+  fun testVoiceGenderSelection() {
+    val vm = AnimalGameViewModel()
+    assertEquals(VoiceGender.FEMALE, vm.uiState.value.voiceGender)
+
+    vm.setVoiceGender(VoiceGender.MALE)
+    assertEquals(VoiceGender.MALE, vm.uiState.value.voiceGender)
+
+    vm.setVoiceGender(VoiceGender.FEMALE)
+    assertEquals(VoiceGender.FEMALE, vm.uiState.value.voiceGender)
+  }
+
+  @Test
   fun testViewModelQuizFlow() {
     val vm = AnimalGameViewModel()
     vm.selectAgeGroup(AgeGroup.AGE_3)
@@ -100,7 +113,6 @@ class ExampleUnitTest {
     val initialState = vm.uiState.value
     assertEquals(0, initialState.starsCount)
     assertEquals(1, initialState.roundNumber)
-    assertEquals(GameTab.QUIZ, initialState.currentTab)
     assertFalse(initialState.showRewardOverlay)
 
     // Yanlış cevap testi
@@ -114,8 +126,11 @@ class ExampleUnitTest {
     // Doğru cevap testi
     val resultCorrect = vm.onAnimalSelected(target)
     assertTrue(resultCorrect)
-    assertTrue(vm.uiState.value.showRewardOverlay)
+    assertTrue(vm.uiState.value.currentQuestion.answeredCorrectly)
     assertEquals(target.rewardFruit, vm.uiState.value.currentFruitReward)
+
+    vm.showRewardScreen()
+    assertTrue(vm.uiState.value.showRewardOverlay)
 
     // Ödül tamamlandığında sonraki soruya geçiş
     vm.onRewardCompleted()

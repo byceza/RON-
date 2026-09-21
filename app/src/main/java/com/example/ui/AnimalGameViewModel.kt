@@ -7,15 +7,11 @@ import com.example.model.Animal
 import com.example.model.AnimalRepository
 import com.example.model.LearningCategory
 import com.example.model.LearningItem
+import com.example.model.VoiceGender
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-
-enum class GameTab {
-    QUIZ,       // Soru & Eşleştirme Modu
-    SOUNDBOARD  // Gerçek Sesleri Dinle & Keşfet Modu
-}
 
 data class QuizQuestion(
     val targetAnimal: LearningItem,
@@ -28,12 +24,18 @@ data class GameUiState(
     val selectedAgeGroup: AgeGroup? = null, // null = Ana Sayfada Yaş Seçimi Ekranı
     val currentAgeGroup: AgeGroup = AgeGroup.AGE_3,
     val selectedCategory: LearningCategory = LearningCategory.ALL,
-    val currentTab: GameTab = GameTab.QUIZ,
+    val voiceGender: VoiceGender = VoiceGender.FEMALE,
     val currentQuestion: QuizQuestion,
     val currentFruitReward: RewardFruit = RewardFruit.APPLE,
     val showRewardOverlay: Boolean = false,
     val starsCount: Int = 0,
-    val roundNumber: Int = 1
+    val roundNumber: Int = 1,
+    // State-based reward sticker collection
+    val unlockedFruitStickers: Set<String> = emptySet(),
+    val newlyUnlockedSticker: RewardFruit? = null,
+    val showStickerCollectionDialog: Boolean = false,
+    val moduleRoundsCompleted: Int = 0,
+    val moduleTargetRounds: Int = 5 // Her 5 başarılı soruda bir öğrenme modülü tamamlanır ve yeni bir çıkartma kilidi açılır
 )
 
 class AnimalGameViewModel : ViewModel() {
@@ -54,7 +56,8 @@ class AnimalGameViewModel : ViewModel() {
                 selectedAgeGroup = null, // Uygulama İLK AÇILDIĞINDA ANA SAYFADA YAŞ SEÇİMİ AÇILIR
                 currentAgeGroup = initialAge,
                 selectedCategory = initialCategory,
-                currentQuestion = initialQuestion
+                currentQuestion = initialQuestion,
+                unlockedFruitStickers = setOf(RewardFruit.APPLE.name) // Başlangıçta 1 adet hoş geldin çıkartması
             )
         )
     }
@@ -102,7 +105,8 @@ class AnimalGameViewModel : ViewModel() {
                 currentQuestion = nextQuestion,
                 showRewardOverlay = false,
                 starsCount = 0,
-                roundNumber = 1
+                roundNumber = 1,
+                moduleRoundsCompleted = 0
             )
         }
     }
@@ -122,17 +126,20 @@ class AnimalGameViewModel : ViewModel() {
         }
     }
 
+    fun setVoiceGender(voiceGender: VoiceGender) {
+        _uiState.update { state ->
+            state.copy(voiceGender = voiceGender)
+        }
+    }
+
     fun returnToAgeSelection() {
         _uiState.update { state ->
             state.copy(
                 selectedAgeGroup = null,
-                showRewardOverlay = false
+                showRewardOverlay = false,
+                showStickerCollectionDialog = false
             )
         }
-    }
-
-    fun selectTab(tab: GameTab) {
-        _uiState.update { it.copy(currentTab = tab) }
     }
 
     fun onAnimalSelected(selectedAnimal: Animal): Boolean {
@@ -171,18 +178,48 @@ class AnimalGameViewModel : ViewModel() {
         _uiState.update { state ->
             val nextRound = state.roundNumber + 1
             val nextStars = state.starsCount + 1
+            val nextModuleProgress = state.moduleRoundsCompleted + 1
+
+            // Modül tamamlandı mı kontrol et (her moduleTargetRounds soruda bir modül biter)
+            val isModuleFinished = nextModuleProgress >= state.moduleTargetRounds
+
+            var newlyUnlocked: RewardFruit? = null
+            var updatedStickers = state.unlockedFruitStickers
+
+            if (isModuleFinished) {
+                // Henüz açılmamış meyvelerden birini seç veya mevcut ödül meyvesini ekle
+                val allFruits = RewardFruit.values().toList()
+                val lockedFruits = allFruits.filter { !state.unlockedFruitStickers.contains(it.name) }
+                val stickerToUnlock = lockedFruits.firstOrNull() ?: state.currentFruitReward
+                newlyUnlocked = stickerToUnlock
+                updatedStickers = state.unlockedFruitStickers + stickerToUnlock.name
+            }
+
             val nextQuestion = generateQuestion(
                 ageGroup = state.currentAgeGroup,
                 category = state.selectedCategory,
                 excludeItemId = state.currentQuestion.targetAnimal.id
             )
+
             state.copy(
                 showRewardOverlay = false,
                 starsCount = nextStars,
                 roundNumber = nextRound,
-                currentQuestion = nextQuestion
+                currentQuestion = nextQuestion,
+                moduleRoundsCompleted = if (isModuleFinished) 0 else nextModuleProgress,
+                unlockedFruitStickers = updatedStickers,
+                newlyUnlockedSticker = newlyUnlocked,
+                showStickerCollectionDialog = isModuleFinished
             )
         }
+    }
+
+    fun openStickerCollection() {
+        _uiState.update { it.copy(showStickerCollectionDialog = true, newlyUnlockedSticker = null) }
+    }
+
+    fun closeStickerCollection() {
+        _uiState.update { it.copy(showStickerCollectionDialog = false, newlyUnlockedSticker = null) }
     }
 
     fun restartGame() {
@@ -191,7 +228,9 @@ class AnimalGameViewModel : ViewModel() {
                 currentQuestion = generateQuestion(state.currentAgeGroup, state.selectedCategory, null),
                 starsCount = 0,
                 roundNumber = 1,
-                showRewardOverlay = false
+                moduleRoundsCompleted = 0,
+                showRewardOverlay = false,
+                showStickerCollectionDialog = false
             )
         }
     }
